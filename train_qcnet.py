@@ -42,6 +42,7 @@ if __name__ == '__main__':
     parser.add_argument('--accelerator', type=str, default='auto')
     parser.add_argument('--devices', type=int, required=True)
     parser.add_argument('--max_epochs', type=int, default=64)
+    # parser.add_argument('--max_epochs', type=int, default=128)
     QCNet.add_model_specific_args(parser)
     args = parser.parse_args()
 
@@ -51,7 +52,9 @@ if __name__ == '__main__':
     }[args.dataset](**vars(args))
     model_checkpoint = ModelCheckpoint(monitor='val_minFDE', save_top_k=5, mode='min')
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
+    checkpoint_path = '/mnt/lustrenew/fengxiaotong/QCNet/lightning_logs/version_3994329/checkpoints/epoch=60-step=19093.ckpt'
     trainer = pl.Trainer(accelerator=args.accelerator, devices=args.devices,
                          strategy=DDPStrategy(find_unused_parameters=False, gradient_as_bucket_view=True),
                          callbacks=[model_checkpoint, lr_monitor], max_epochs=args.max_epochs)
+    # trainer.fit(model, datamodule, ckpt_path=checkpoint_path)
     trainer.fit(model, datamodule)

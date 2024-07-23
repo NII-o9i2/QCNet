@@ -245,6 +245,8 @@ class ArgoverseV2Dataset(Dataset):
             if not current_valid_mask[agent_idx]:
                 predict_mask[agent_idx, self.num_historical_steps:] = False
 
+            # c_predict_mask = predict_mask[agent_idx, :].tolist()
+            # c_valid_mask = valid_mask[agent_idx, :].tolist()
             agent_id[agent_idx] = track_id
             agent_type[agent_idx] = self._agent_types.index(track_df['object_type'].values[0])
             agent_category[agent_idx] = track_df['object_category'].values[0]
