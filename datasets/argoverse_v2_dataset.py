@@ -147,7 +147,6 @@ class ArgoverseV2Dataset(Dataset):
                              'NONE', 'UNKNOWN', 'CROSSWALK', 'CENTERLINE']
         self._point_sides = ['LEFT', 'RIGHT', 'CENTER']
         self._polygon_to_polygon_types = ['NONE', 'PRED', 'SUCC', 'LEFT', 'RIGHT']
-        # todo: @jojo PRED & SUCC ?
         super(ArgoverseV2Dataset, self).__init__(root=root, transform=transform, pre_transform=None, pre_filter=None)
 
     @property
@@ -279,7 +278,7 @@ class ArgoverseV2Dataset(Dataset):
     def get_map_features(self,
                          map_api: ArgoverseStaticMap,
                          centerlines: Mapping[str, Polyline]) -> Dict[Union[str, Tuple[str, str, str]], Any]:
-        lane_segment_ids = map_api.get_scenario_lane_segment_ids()
+        lane_segment_ids = list(centerlines.keys())
         cross_walk_ids = list(map_api.vector_pedestrian_crossings.keys())
         polygon_ids = lane_segment_ids + cross_walk_ids
         num_polygons = len(lane_segment_ids) + len(cross_walk_ids) * 2
@@ -298,6 +297,8 @@ class ArgoverseV2Dataset(Dataset):
         point_side: List[Optional[torch.Tensor]] = [None] * num_polygons
 
         for lane_segment in map_api.get_scenario_lane_segments():
+            if lane_segment.id not in lane_segment_ids:
+                continue
             lane_segment_idx = polygon_ids.index(lane_segment.id)
             centerline = torch.from_numpy(centerlines[lane_segment.id].xyz).float()
             polygon_position[lane_segment_idx] = centerline[0, :self.dim]
@@ -425,6 +426,8 @@ class ArgoverseV2Dataset(Dataset):
         polygon_to_polygon_edge_index = []
         polygon_to_polygon_type = []
         for lane_segment in map_api.get_scenario_lane_segments():
+            if lane_segment.id not in lane_segment_ids:
+                continue
             lane_segment_idx = polygon_ids.index(lane_segment.id)
             pred_inds = []
             for pred in lane_segment.predecessors:
